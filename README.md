@@ -1,0 +1,1 @@
+Repo for creating a narrow AI for Connect 4.
