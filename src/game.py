@@ -70,3 +70,12 @@ class Game:
     # Check for draw (all columns filled)
     def is_draw(self):
         return all(h == ROWS for h in self.heights)
+
+    def getRows(self):
+        return ROWS
+    
+    def getCols(self):
+        return COLS
+    
+    def getWin(self):
+        return WIN

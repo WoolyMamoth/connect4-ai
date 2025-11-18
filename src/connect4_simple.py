@@ -3,22 +3,17 @@ import math      # For mathematical constants (e.g., infinity)
 import random    # For generating random moves (used for opponent)
 from game import Game
 
-# ----- CONSTANTS -----
-ROWS = 6         # Number of rows in the Connect 4 board
-COLS = 7         # Number of columns
-WIN = 4          # Number of consecutive discs needed to win
-
 # ======================
 #   EVALUATION FUNCTION
 # ======================
 def evaluate(g: Game, me):
     opp = 3 - me       # Opponent’s player number
     score = 0
-    center_col = COLS // 2  # Integer division for center column index
+    center_col = g.getCols() // 2  # Integer division for center column index
 
     # --- Center control preference ---
     # Encourage occupying the center column
-    for r in range(ROWS):
+    for r in range(g.getRows()):
         if g.board[r][center_col] == me:
             score += 3
         elif g.board[r][center_col] == opp:
@@ -41,26 +36,26 @@ def evaluate(g: Game, me):
     B = g.board
 
     # --- Horizontal windows ---
-    for r in range(ROWS):
-        for c in range(COLS - 3):  # up to COLS-4 index (inclusive)
+    for r in range(g.getRows()):
+        for c in range(g.getCols() - 3):  # up to COLS-4 index (inclusive)
             w = [B[r][c + i] for i in range(4)]
             score += window_score(w)
 
     # --- Vertical windows ---
-    for c in range(COLS):
-        for r in range(ROWS - 3):
+    for c in range(g.getCols()):
+        for r in range(g.getRows() - 3):
             w = [B[r + i][c] for i in range(4)]
             score += window_score(w)
 
     # --- Diagonal down-right (↘) windows ---
-    for r in range(ROWS - 3):
-        for c in range(COLS - 3):
+    for r in range(g.getRows() - 3):
+        for c in range(g.getCols() - 3):
             w = [B[r + i][c + i] for i in range(4)]
             score += window_score(w)
 
     # --- Diagonal down-left (↙) windows ---
-    for r in range(ROWS - 3):
-        for c in range(3, COLS):
+    for r in range(g.getRows() - 3):
+        for c in range(3, g.getCols()):
             w = [B[r + i][c - i] for i in range(4)]
             score += window_score(w)
 
@@ -83,7 +78,7 @@ def negamax(g: Game, depth, alpha, beta, color, me):
     moves = g.legal_moves()         # All valid moves
 
     # Order moves by closeness to center column (good heuristic)
-    moves.sort(key=lambda c: -abs(c - COLS // 2))
+    moves.sort(key=lambda c: -abs(c - g.getCols() // 2))
 
     # --- Recursive search ---
     for m in moves:
