@@ -1,3 +1,6 @@
 # Python generated files
 __pycache__/
 *.pyc
+
+# Game data
+src/games/
