@@ -82,7 +82,7 @@ class find_best_move:
             return color * find_best_move.evaluate(g, me)
 
         best = -math.inf  # Initialize best score
-        moves = g.legal_moves()  # All valid moves
+        moves = g.get_legal_moves()  # All valid moves
 
         # Order moves by closeness to center column (good heuristic)
         moves.sort(key=lambda c: -abs(c - g.getCols() // 2))
@@ -112,7 +112,7 @@ class find_best_move:
         best_val = -math.inf
 
         # Try every legal move and keep the one with the highest value
-        for m in g.legal_moves():
+        for m in g.get_legal_moves():
             g.play(m)
             val = -find_best_move.negamax(g, depth - 1, -math.inf, math.inf, -1, me)
             g.undo(m)

@@ -1,4 +1,3 @@
-# connect4_simple.py
 import math  # For mathematical constants (e.g., infinity)
 import random  # For generating random moves (used for opponent)
 from game import Game

@@ -1,4 +1,3 @@
-# selfplay.py
 import random
 import json
 from game import Game
@@ -22,12 +21,12 @@ def play_selfplay_game(engine_depth=4):
     while True:
         # record state
         board = encode_board_state(g)
-        game_history.append((board, g.current_player))
+        game_history.append((board, g.player))
 
         # check terminal states
-        if g.check_win(1):
+        if g.is_win_for(1):
             return game_history, 1
-        if g.check_win(2):
+        if g.is_win_for(2):
             return game_history, 2
         if g.is_draw():
             return game_history, 0
@@ -36,12 +35,12 @@ def play_selfplay_game(engine_depth=4):
         if random.random() < 0.1:  # 10% random noise
             move = random.choice(g.get_legal_moves())
         else:
-            move, _ = find_best_move(g, depth=engine_depth)
+            move, _ = find_best_move.find_best_move(g, depth=engine_depth)
 
-        g.make_move(move)
+        g.play(move)
 
 
-def generate_dataset(num_games=2000, output_file="dataset.jsonl"):
+def generate_dataset(num_games=2000, output_file="games/dataset.jsonl"):
     with open(output_file, "w") as f:
         for i in range(num_games):
             history, winner = play_selfplay_game()
@@ -54,7 +53,10 @@ def generate_dataset(num_games=2000, output_file="dataset.jsonl"):
                 else:
                     outcome = +1 if winner == player else -1
 
-                entry = {"board": board, "value": outcome}
-                f.write(json.dumps(entry) + "\n")
+                f.write(json.dumps({"board": board, "value": outcome}) + "\n")
 
     print(f"Saved dataset to {output_file}")
+
+
+if __name__ == "__main__":
+    generate_dataset(100, "./src/games/dataset.jsonl")
