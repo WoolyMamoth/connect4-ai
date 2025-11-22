@@ -1,8 +1,17 @@
 import math  # For mathematical constants (e.g., infinity)
+import torch
 from game import Game
+from model import ValueNet
+
+NET = ValueNet()
+try:
+    NET.load_state_dict(torch.load("valuenet.pt", map_location="cpu"))
+except Exception:
+    pass
+NET.eval()
 
 
-class find_best_move:
+class search:
     # ======================
     #   EVALUATION FUNCTION
     # ======================
@@ -68,6 +77,15 @@ class find_best_move:
 
         return score  # Higher = better for 'me'
 
+    @staticmethod
+    def evaluate_nn(g, model, me):
+        from selfplay import encode_board_state
+
+        board_tensor = torch.tensor(encode_board_state(g), dtype=torch.float32)
+        with torch.no_grad():
+            val = model(board_tensor).item()
+        return val * 1000
+
     # ======================
     #   NEGAMAX SEARCH
     # ======================
@@ -79,7 +97,8 @@ class find_best_move:
         if g.is_win_for(3 - g.player):  # If previous move won
             return -99999 * color  # Huge negative for losing state
         if g.is_draw() or depth == 0:  # Depth limit or draw
-            return color * find_best_move.evaluate(g, me)
+            # return color * find_best_move.evaluate(g, me) # Use heuristic eval
+            return color * search.evaluate_nn(g, NET, me)  # Use NN eval
 
         best = -math.inf  # Initialize best score
         moves = g.get_legal_moves()  # All valid moves
@@ -91,7 +110,7 @@ class find_best_move:
         for m in moves:
             g.play(m)  # Make move
             # Recursive negamax call — note the sign inversion pattern
-            val = -find_best_move.negamax(g, depth - 1, -beta, -alpha, -color, me)
+            val = -search.negamax(g, depth - 1, -beta, -alpha, -color, me)
             g.undo(m)  # Undo move (restore state)
 
             if val > best:  # Keep best value
@@ -114,7 +133,7 @@ class find_best_move:
         # Try every legal move and keep the one with the highest value
         for m in g.get_legal_moves():
             g.play(m)
-            val = -find_best_move.negamax(g, depth - 1, -math.inf, math.inf, -1, me)
+            val = -search.negamax(g, depth - 1, -math.inf, math.inf, -1, me)
             g.undo(m)
             if val > best_val:
                 best_val = val

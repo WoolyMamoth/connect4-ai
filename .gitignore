@@ -4,3 +4,6 @@ __pycache__/
 
 # Game data
 src/games/
+
+# PyTorch model files
+*.pt

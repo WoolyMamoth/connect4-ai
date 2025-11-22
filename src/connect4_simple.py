@@ -1,7 +1,7 @@
 import math  # For mathematical constants (e.g., infinity)
 import random  # For generating random moves (used for opponent)
 from game import Game
-from search import find_best_move
+from search import search
 
 # ======================
 #   MAIN DEMONSTRATION
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     while True:
         print("Board heights:", g.heights)  # Simple board summary
 
-        move, val = find_best_move.find_best_move(g, depth=4)
+        move, val = search.find_best_move(g, depth=4)
         if move is None:  # No moves left
             print("No move — draw?")
             break
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
         # --- Random opponent move ---
         if random_opponent:
-            opp_moves = g.legal_moves()
+            opp_moves = g.get_legal_moves()
             opp = random.choice(opp_moves)  # Pick random legal column
             g.play(opp)
             print("Opponent plays", opp)
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         # --- Human player's turn ---
         if human_player:
             print("\nYour turn! (enter a column number 0–6)")
-            legal = g.legal_moves()
+            legal = g.get_legal_moves()
 
             while True:
                 try:

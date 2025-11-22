@@ -1,7 +1,7 @@
 import random
 import json
 from game import Game
-from search import find_best_move  # your negamax engine
+from search import search  # your negamax engine
 
 
 def encode_board_state(g: Game):
@@ -35,12 +35,12 @@ def play_selfplay_game(engine_depth=4):
         if random.random() < 0.1:  # 10% random noise
             move = random.choice(g.get_legal_moves())
         else:
-            move, _ = find_best_move.find_best_move(g, depth=engine_depth)
+            move, _ = search.find_best_move(g, depth=engine_depth)
 
         g.play(move)
 
 
-def generate_dataset(num_games=2000, output_file="games/dataset.jsonl"):
+def generate_dataset(num_games=2000, output_file="./src/games/dataset.jsonl"):
     with open(output_file, "w") as f:
         for i in range(num_games):
             history, winner = play_selfplay_game()
