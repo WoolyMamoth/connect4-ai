@@ -1,7 +1,13 @@
 import random
 import json
+import torch
 from game import Game
-from search import search  # your negamax engine
+import search  # your negamax engine
+
+
+# ===========================
+# SUPERVISED LEARNING HELPERS
+# ===========================
 
 
 def encode_board_state(g: Game):
@@ -60,3 +66,71 @@ def generate_dataset(num_games=2000, output_file="./src/games/dataset.jsonl"):
 
 if __name__ == "__main__":
     generate_dataset(100, "./src/games/dataset.jsonl")
+
+# ==============================
+# REINFORCEMENT LEARNING HELPERS
+# ==============================
+
+
+def encode_board(game):
+    board = []
+    for r in range(6):
+        for c in range(7):
+            piece = game.board[r][c]
+            board.append(piece)
+    return torch.tensor(board, dtype=torch.float32)
+
+
+def self_play_game(model, max_random_moves=5):
+    game = Game()
+    states = []
+    current_player = 1
+
+    while True:
+        # store encoded state
+        states.append(encode_board(game))
+
+        if game.is_win_for(1):
+            return states, 1  # P1 wins → outcome = +1
+        if game.is_win_for(2):
+            return states, -1  # P2 wins → outcome = -1
+        if game.is_draw():
+            return states, 0  # draw
+
+        moves = game.get_legal_moves()
+
+        if len(states) <= max_random_moves:
+            # exploration phase: choose random move
+            move = random.choice(moves)
+        else:
+            # greedy by neural network value estimate
+            best_val = -999
+            best_move = random.choice(moves)
+            for m in moves:
+                g2 = game.clone()
+                g2.play(m)
+                val = model(encode_board(g2))
+                if val > best_val:
+                    best_val = val
+                    best_move = m
+            move = best_move
+
+        game.play(move)
+
+
+def generate_self_play_data(model, num_games):
+    data_states = []
+    data_targets = []
+
+    for _ in range(num_games):
+        states, outcome = self_play_game(model)
+        # outcome is from P1 POV, but states alternate players
+        cur_player = 1
+        for s in states:
+            data_states.append(s)
+            data_targets.append(outcome * cur_player)
+            cur_player *= -1  # flip perspective each move
+
+    X = torch.stack(data_states)
+    y = torch.tensor(data_targets).float().unsqueeze(1)
+    return X, y

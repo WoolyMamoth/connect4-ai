@@ -2,15 +2,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+rl = True
+if rl:
+    input = 42
+else:
+    input = 84
+
 
 class ValueNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(84, 128)
-        self.fc2 = nn.Linear(128, 64)
-        self.fc3 = nn.Linear(64, 1)
+        self.net = nn.Sequential(
+            nn.Linear(input, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1),
+            nn.Tanh(),  # outputs in [-1, 1]
+        )
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        return torch.tanh(self.fc3(x))  # value in [-1, 1]
+        return self.net(x)

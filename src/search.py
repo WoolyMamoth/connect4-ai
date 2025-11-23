@@ -78,13 +78,27 @@ class search:
         return score  # Higher = better for 'me'
 
     @staticmethod
-    def evaluate_nn(g, model, me):
+    def evaluate_sl(g, model, me):
         from selfplay import encode_board_state
 
         board_tensor = torch.tensor(encode_board_state(g), dtype=torch.float32)
         with torch.no_grad():
             val = model(board_tensor).item()
         return val * 1000
+
+    @staticmethod
+    def evaluate_rl(g, model):
+        from selfplay import encode_board
+
+        model.eval()
+
+        board_tensor = torch.tensor(encode_board(g), dtype=torch.float32)  # shape [42]
+        value = model(board_tensor).item()  # scalar in [-1, 1]
+
+        if g.player == 2:
+            value = -value
+
+        return value * 1000
 
     # ======================
     #   NEGAMAX SEARCH
@@ -98,7 +112,8 @@ class search:
             return -99999 * color  # Huge negative for losing state
         if g.is_draw() or depth == 0:  # Depth limit or draw
             # return color * find_best_move.evaluate(g, me) # Use heuristic eval
-            return color * search.evaluate_nn(g, NET, me)  # Use NN eval
+            # return color * search.evaluate_sl(g, NET, me)  # Use supervised learning eval
+            return color * search.evaluate_rl(g, NET)  # Use reinforcement learning eval
 
         best = -math.inf  # Initialize best score
         moves = g.get_legal_moves()  # All valid moves

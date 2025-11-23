@@ -3,6 +3,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from model import ValueNet
 import torch.nn as nn
+import torch.optim as optim
+import selfplay
 
 
 class Connect4Dataset(Dataset):
@@ -25,6 +27,7 @@ class Connect4Dataset(Dataset):
         return board, value
 
 
+# Supervised learining
 def train_model(dataset_file="./src/games/dataset.jsonl", epochs=8, batch=256):
     ds = Connect4Dataset(dataset_file)
     dl = DataLoader(ds, batch_size=batch, shuffle=True)
@@ -50,5 +53,30 @@ def train_model(dataset_file="./src/games/dataset.jsonl", epochs=8, batch=256):
     print("Saved model to valuenet.pt")
 
 
+# Reinforcement learning
+def train_model(model, X, y, epochs=5, lr=1e-3):
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    loss_fn = nn.MSELoss()
+
+    for _ in range(epochs):
+        optimizer.zero_grad()
+        preds = model(X)
+        loss = loss_fn(preds, y)
+        loss.backward()
+        optimizer.step()
+
+    return model
+
+
 if __name__ == "__main__":
-    train_model()
+    rl = True
+    if rl:
+        model = ValueNet()
+        for i in range(20):
+            print(f"=== Iteration {i} ===")
+            # 1. generate self-play data
+            X, y = selfplay.generate_self_play_data(model, num_games=50)
+            # 2. train network
+            model = train_model(model, X, y)
+    else:
+        train_model()
